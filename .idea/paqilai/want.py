@@ -8,23 +8,28 @@ db = pymysql.connect(host="localhost",user="root",password="123456",db="ssm_wei"
 
 #电影 详情页的的基本前缀
 
-site = 'http://www.ygdy8.net'
+site = 'https://www.dytt8.net'
 
 #构建电影类
 
 class Movie:
-    def __init__(self,name,translatedNames,year,area,type,link):
-        self.name = name  #译名
+    def __init__(self,name,translatedNames,year,area,type,link,IMDbPoint,douPoint,time,language,releaseTime):
+        self.name = name  #名字
         self.translatedNames = translatedNames #译名
         self.year = year #年代
         self.area = area #产地
         self.type = type #类别
         self.link = link #下载链接
+        self.IMDbPoint = IMDbPoint #IMDb评分
+        self.douPoint = douPoint #豆瓣评分
+        self.time = time #片长
+        self.language = language #语言
+        self.releaseTime = releaseTime #上映时间
 
 
 
     def __str__(self):
-        return '%s,\t下载地址:%s,译名:%s,年代:%s,产地:%s,类别:%s'%(self.name, self.link,self.translatedNames,self.year,self.area,self.type)
+        return '%s,\t下载地址:%s,译名:%s,年代:%s,产地:%s,类别:%s,IMDb评分:%s,豆瓣评分:%s,片长:%s,语言:%s,上映时间:%s'%(self.name, self.link,self.translatedNames,self.year,self.area,self.type,self.IMDbPoint,self.douPoint,self.time,self.language,self.releaseTime)
 
     __repr__ = __str__
 
@@ -63,31 +68,49 @@ def getMovieData(url):
 
 
     dataSpan = soup.find('span', attrs={"style": "FONT-SIZE: 12px"})
-    dataP = dataSpan.find('p')
-    dataBrs = dataP.text.replace('<br>','')
+    #dataP = dataSpan.find('p')
+    dataBrs = dataSpan.text.replace('<br>','')
     dataBrs = dataBrs.replace('\u3000\u3000','')
     dataBrs = dataBrs.replace(' ','')
     data = dataBrs.split('◎')
+    print(data)
+    #将数据存进字典里，和java 的map差不多
+    dict={}
+    for i in range(1, len(data)-2):
+        dataChild = data[i].split('\u3000')
+        if(len(dataChild) == 2):
+            dict[dataChild[0]]=dataChild[1]
+
     #译名
-    translatedNames = data[1][3:]
+    translatedNames = dict.get('译名')
     #年代
-    year = data[3][3:]
+    year = dict.get('年代')
     #产地
-    area = data[4][3:]
+    area = dict.get('国家')
     #类别
-    type = data[5][3:]
+    type = dict.get('类别')
+    #IMDb评分
+    IMDbPoint = dict.get('IMDb评分')
+    #豆瓣评分
+    douPoint = dict.get('豆瓣评分')
+    #片长
+    time = dict.get('片长')
+    #语言
+    language = dict.get('语言')
+    #上映时间
+    releaseTime = dict.get('上映日期')
     #下载链接
     downloadTd = soup.find('td', attrs={"style": "WORD-WRAP: break-word"})
     downloadA = downloadTd.find('a')
     link = downloadA['href']
     #封装成movie对象
-    movie = Movie(name,translatedNames,year,area,type,link)
+    movie = Movie(name,translatedNames,year,area,type,link,IMDbPoint,douPoint,time,language,releaseTime)
     return movie
 
 def saveMovie(movie):
     cur = db.cursor()
-    sql = """insert into movie(name,translated_names,year,area,type,link) VALUES ('%s','%s','%s','%s','%s','%s')"""%\
-          (movie.name,movie.translatedNames,movie.year,movie.area,movie.type,movie.link)
+    sql = """insert into movie(name,translated_names,year,area,type,link,IMDb_point,dou_point,time,language,releaseTime,catagory) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',2)"""%\
+          (movie.name,movie.translatedNames,movie.year,movie.area,movie.type,movie.link,movie.IMDbPoint,movie.douPoint,movie.time,movie.language,movie.releaseTime)
     try:
         # 执行sql语句
         cur.execute(sql)
@@ -100,8 +123,9 @@ def saveMovie(movie):
 
 
 if __name__ == '__main__':
-    for index in range(188):
-        index += 1
-        url = 'http://www.ygdy8.net/html/gndy/dyzz/list_23_' + str(index) + '.html'
+    for index in range(2):
+        index += 112
+        print(index)
+        url = 'https://www.dytt8.net/html/gndy/china/list_4_' + str(index) + '.html'
         findMovie(url)
     db.close()
