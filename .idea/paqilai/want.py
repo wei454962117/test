@@ -52,7 +52,7 @@ def findMovie(url):
             url = site + aContent[1]['href']
             #getMovieData(url)
             movie =  getMovieData(url)
-            saveMovie(movie)
+            #saveMovie(movie)
             print(movie)
 
         except:
@@ -123,8 +123,8 @@ def saveMovie(movie):
 
 
 if __name__ == '__main__':
-    for index in range(2):
-        index += 112
+    for index in range(1):
+        index += 1
         print(index)
         url = 'https://www.dytt8.net/html/gndy/china/list_4_' + str(index) + '.html'
         findMovie(url)
